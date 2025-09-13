@@ -1,0 +1,87 @@
+/* Custom styles for Astriana Travels */
+body {
+    font-family: 'Arial', sans-serif;
+}
+
+/* World map watermark background */
+.hero-bg {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" fill="none" stroke="%231D3557" stroke-width="0.5" stroke-opacity="0.1"><path d="M100,100 C200,50 300,150 400,100 M450,200 C550,150 650,250 750,200 M200,300 C300,350 400,250 500,300 M600,400 C700,450 800,350 900,400 M100,500 C200,550 300,450 400,500" /></svg>');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Parallax effect on desktop */
+}
+
+/* Disable parallax on mobile for performance */
+@media (max-width: 768px) {
+    .hero-bg {
+        background-attachment: scroll;
+    }
+}
+
+/* Plane animation with trail */
+.animate-plane {
+    animation: fly 6s infinite ease-in-out;
+}
+.plane {
+    animation: fly-plane 6s infinite ease-in-out;
+}
+@keyframes fly {
+    0% { transform: translateX(-80px) translateY(0); }
+    50% { transform: translateX(80px) translateY(-15px); }
+    100% { transform: translateX(-80px) translateY(0); }
+}
+@keyframes fly-plane {
+    0% { transform: translateX(-80px) translateY(0) rotate(0deg); }
+    50% { transform: translateX(80px) translateY(-15px) rotate(5deg); }
+    100% { transform: translateX(-80px) translateY(0) rotate(0deg); }
+}
+
+/* Floating icon animations */
+.animate-float {
+    animation: float 4s infinite ease-in-out;
+}
+.animate-float-delay {
+    animation: float 4s infinite ease-in-out 1s;
+}
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0); }
+}
+
+/* Scroll-triggered animation */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.animate-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Loading spinner */
+.loading {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Autocomplete suggestions */
+#from-suggestions, #to-suggestions {
+    font-size: 0.9rem;
+}
+@media (max-width: 640px) {
+    #from-suggestions, #to-suggestions {
+        font-size: 0.8rem;
+    }
+}
+
+/* Touch-friendly button sizes */
+button, a[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+}

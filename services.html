@@ -1,0 +1,129 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services - Astriana Travels</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#1D3557',
+                        orange: '#F4A300',
+                        red: '#E63946',
+                        lightGray: '#F9FAFB',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-white text-gray-700 font-sans">
+    <header class="sticky top-0 z-50 bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-navy">Astriana Travels</div>
+            <ul class="hidden md:flex space-x-6">
+                <li><a href="index.html" class="text-navy hover:text-orange">Home</a></li>
+                <li><a href="about.html" class="text-navy hover:text-orange">About</a></li>
+                <li><a href="services.html" class="text-navy hover:text-orange">Services</a></li>
+                <li><a href="routes.html" class="text-navy hover:text-orange">Routes & Fares</a></li>
+                <li><a href="contact.html" class="text-navy hover:text-orange">Contact</a></li>
+            </ul>
+            <a href="book-now.html" class="bg-red text-white px-6 py-2 rounded-2xl hover:bg-orange transition">Book Now</a>
+            <button id="mobile-menu-btn" class="md:hidden text-navy"><i class="fas fa-bars text-2xl"></i></button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-white shadow-md">
+            <ul class="flex flex-col items-center py-4">
+                <li><a href="index.html" class="text-navy hover:text-orange py-2">Home</a></li>
+                <li><a href="about.html" class="text-navy hover:text-orange py-2">About</a></li>
+                <li><a href="services.html" class="text-navy hover:text-orange py-2">Services</a></li>
+                <li><a href="routes.html" class="text-navy hover:text-orange py-2">Routes & Fares</a></li>
+                <li><a href="contact.html" class="text-navy hover:text-orange py-2">Contact</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <section id="services" class="py-20 bg-lightGray">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-navy text-center mb-12">Our Services</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-navy mb-2">Flight Bookings</h3>
+                    <p>Book flights to destinations worldwide with competitive fares and student discounts.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-navy mb-2">Travel Planning</h3>
+                    <p>Customized travel itineraries tailored to your preferences and budget.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-navy mb-2">Visa Assistance</h3>
+                    <p>Guidance on visa requirements and application processes for your destination.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-navy mb-2">24/7 Support</h3>
+                    <p>Reach us anytime via WhatsApp for booking changes or travel queries.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-navy text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <div class="mb-4">
+                <a href="index.html" class="mx-2 hover:text-orange">Home</a> •
+                <a href="about.html" class="mx-2 hover:text-orange">About</a> •
+                <a href="services.html" class="mx-2 hover:text-orange">Services</a> •
+                <a href="routes.html" class="mx-2 hover:text-orange">Routes & Fares</a> •
+                <a href="contact.html" class="mx-2 hover:text-orange">Contact</a>
+            </div>
+            <p class="text-sm">Astriana Travels partners with authorized consolidators for ticket issuance. Not IATA-accredited yet but operating under trusted partners.</p>
+            <p class="text-sm mt-2">Copyright © 2025 Astriana Travels</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

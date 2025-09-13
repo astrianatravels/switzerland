@@ -1,0 +1,254 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astriana Travels - Global Flight Bookings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#1D3557',
+                        orange: '#F4A300',
+                        red: '#E63946',
+                        lightGray: '#F9FAFB',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="font-sans bg-gray-50 text-gray-700">
+    <!-- Navigation (Sticky) -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center" aria-label="Main navigation">
+            <div class="text-2xl font-bold text-navy">Astriana Travels</div>
+            <div class="hidden md:flex space-x-6">
+                <a href="index.html" class="text-orange hover:underline hover:scale-105 transition" aria-current="page">Home</a>
+                <a href="about.html" class="text-navy hover:text-orange hover:underline hover:scale-105 transition">About</a>
+                <a href="services.html" class="text-navy hover:text-orange hover:underline hover:scale-105 transition">Services</a>
+                <a href="routes.html" class="text-navy hover:text-orange hover:underline hover:scale-105 transition">Routes & Fares</a>
+                <a href="contact.html" class="text-navy hover:text-orange hover:underline hover:scale-105 transition">Contact</a>
+            </div>
+            <a href="book-now.html" class="bg-red text-white px-6 py-2 rounded-2xl hover:bg-orange transition md:text-lg" aria-label="Book a flight">Book Now</a>
+            <button id="mobile-menu-btn" class="md:hidden text-navy" aria-label="Toggle mobile menu"><i class="fas fa-bars text-2xl"></i></button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-white shadow-md">
+            <ul class="flex flex-col items-center py-4">
+                <li><a href="index.html" class="text-navy hover:text-orange py-2">Home</a></li>
+                <li><a href="about.html" class="text-navy hover:text-orange py-2">About</a></li>
+                <li><a href="services.html" class="text-navy hover:text-orange py-2">Services</a></li>
+                <li><a href="routes.html" class="text-navy hover:text-orange py-2">Routes & Fares</a></li>
+                <li><a href="contact.html" class="text-navy hover:text-orange py-2">Contact</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Hero Section with Flight Search and Animations -->
+    <section class="hero-bg py-16 md:py-20 relative overflow-hidden">
+        <div id="particles-js" class="absolute inset-0 z-0 hidden md:block"></div>
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-8 md:mb-0">
+                    <h1 class="text-3xl md:text-5xl font-bold text-navy mb-4">Your Journey, Anywhere in the World ✈️</h1>
+                    <p class="text-lg md:text-xl text-orange mb-6">Affordable global fares powered by trusted partners.</p>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <svg width="200" height="150" viewBox="0 0 300 200" class="animate-plane md:w-[300px]">
+                        <path d="M50,100 Q150,50 250,100" fill="none" stroke="#1D3557" stroke-width="2" stroke-dasharray="5,5"/>
+                        <path d="M30,90 L50,100 L30,110 Z" fill="#E63946" class="plane"/>
+                    </svg>
+                </div>
+            </div>
+            <!-- Flight Search Form -->
+            <div class="mt-8 max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-navy mb-6 text-center">Search Flights</h2>
+                <form id="flightSearch" class="space-y-6" aria-label="Flight search form">
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="relative">
+                            <label for="from" class="block text-navy font-bold mb-2">From</label>
+                            <input type="text" id="from" placeholder="e.g., Geneva (GVA)" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange pr-10" autocomplete="off" aria-autocomplete="list">
+                            <div id="from-suggestions" class="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-md max-h-60 overflow-y-auto z-10 hidden"></div>
+                        </div>
+                        <div class="relative">
+                            <label for="to" class="block text-navy font-bold mb-2">To</label>
+                            <input type="text" id="to" placeholder="e.g., Manila (MNL)" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange pr-10" autocomplete="off" aria-autocomplete="list">
+                            <div id="to-suggestions" class="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-md max-h-60 overflow-y-auto z-10 hidden"></div>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="departure" class="block text-navy font-bold mb-2">Departure Date</label>
+                            <input type="date" id="departure" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange">
+                        </div>
+                        <div>
+                            <label for="return" class="block text-navy font-bold mb-2">Return Date</label>
+                            <input type="date" id="return" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange">
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <label class="block text-navy font-bold mb-2">Passengers</label>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label for="adults" class="text-sm text-gray-600">Adults</label>
+                                <input type="number" id="adults" min="0" value="1" class="w-full p-2 border rounded-lg">
+                            </div>
+                            <div>
+                                <label for="children" class="text-sm text-gray-600">Children</label>
+                                <input type="number" id="children" min="0" value="0" class="w-full p-2 border rounded-lg">
+                            </div>
+                            <div>
+                                <label for="students" class="text-sm text-gray-600">Students</label>
+                                <input type="number" id="students" min="0" value="0" class="w-full p-2 border rounded-lg">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center">
+                        <button type="submit" class="bg-red text-white py-3 px-8 rounded-2xl hover:bg-orange transition w-full md:w-auto">Search Flights</button>
+                    </div>
+                </form>
+            </div>
+            <!-- Search Results (Simulated) -->
+            <div id="results" class="mt-8 hidden">
+                <h3 class="text-2xl font-bold text-navy mb-6 text-center">Flight Results</h3>
+                <div id="discount-notice" class="hidden text-center text-orange font-bold mb-4">
+                    15% Student Discount (STUDENT15OFFAT) Applied!
+                </div>
+                <div class="space-y-6" id="flight-results">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                            <h4 class="text-xl font-bold text-navy">Emirates - 1 Stop (Dubai)</h4>
+                            <span class="text-xl md:text-2xl font-bold text-orange" data-base-price="850">CHF 850</span>
+                        </div>
+                        <p class="text-gray-600">GVA → DXB (4h 30m) → MNL (8h 15m) | Dep: Oct 15, 2025 | Ret: Oct 22, 2025</p>
+                        <a href="https://wa.me/1234567890" class="mt-4 inline-block bg-red text-white px-4 py-2 rounded-2xl hover:bg-orange transition">Select & Book via WhatsApp</a>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                            <h4 class="text-xl font-bold text-navy">Qatar Airways - 1 Stop (Doha)</h4>
+                            <span class="text-xl md:text-2xl font-bold text-orange" data-base-price="1200">CHF 1,200</span>
+                        </div>
+                        <p class="text-gray-600">GVA → DOH (6h) → BKK (7h 45m) | Dep: Oct 20, 2025 | Ret: Oct 27, 2025</p>
+                        <a href="https://wa.me/1234567890" class="mt-4 inline-block bg-red text-white px-4 py-2 rounded-2xl hover:bg-orange transition">Select & Book via WhatsApp</a>
+                    </div>
+                </div>
+            </div>
+            <div id="loading" class="hidden text-center mt-8">
+                <i class="fas fa-spinner fa-spin text-orange text-3xl loading"></i>
+                <p class="mt-2 text-navy">Searching flights...</p>
+            </div>
+        </div>
+        <!-- Floating Icons -->
+        <div class="absolute top-10 left-10 animate-float hidden md:block"><i class="fas fa-suitcase text-3xl text-white opacity-50"></i></div>
+        <div class="absolute bottom-10 right-10 animate-float-delay hidden md:block"><i class="fas fa-passport text-3xl text-white opacity-50"></i></div>
+    </section>
+
+    <!-- Student Discount Section -->
+    <section id="discount" class="py-10 bg-white animate-on-scroll">
+        <div class="container mx-auto px-4 text-center">
+            <div class="bg-white text-navy p-4 rounded-lg shadow-md inline-block">
+                <p class="text-lg font-bold">Special Offer: Use code <span class="text-orange font-bold">STUDENT15OFFAT</span> for 15% off student bookings!</p>
+                <button id="copy-discount" class="mt-2 bg-orange text-white px-4 py-2 rounded-2xl hover:bg-navy transition" aria-label="Copy discount code">Copy Code</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Destinations -->
+    <section class="py-16 bg-lightGray animate-on-scroll">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-navy text-center mb-8">Popular Destinations</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-navy mb-2">Manila</h3>
+                    <p class="text-gray-600">From CHF 750</p>
+                    <a href="book-now.html" class="mt-4 inline-block text-orange hover:underline">Book Now</a>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-navy mb-2">Bangkok</h3>
+                    <p class="text-gray-600">From CHF 1,100</p>
+                    <a href="book-now.html" class="mt-4 inline-block text-orange hover:underline">Book Now</a>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-navy mb-2">New York</h3>
+                    <p class="text-gray-600">From CHF 700</p>
+                    <a href="book-now.html" class="mt-4 inline-block text-orange hover:underline">Book Now</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call-to-Action Banner -->
+    <section class="py-16 bg-orange animate-on-scroll">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold text-white mb-6">Ready to Book Your Next Flight?</h2>
+            <a href="https://wa.me/1234567890" class="bg-red text-white px-8 py-3 rounded-2xl text-lg hover:bg-navy transition animate-pulse" aria-label="Book via WhatsApp">Book Now via WhatsApp</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-navy text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6">
+                    <a href="index.html" class="hover:text-orange">Home</a>
+                    <a href="about.html" class="hover:text-orange">About</a>
+                    <a href="services.html" class="hover:text-orange">Services</a>
+                    <a href="routes.html" class="hover:text-orange">Routes & Fares</a>
+                    <a href="contact.html" class="hover:text-orange">Contact</a>
+                </div>
+                <div class="flex flex-col items-center md:items-end space-y-2">
+                    <p class="text-sm">Contact us: <a href="https://wa.me/1234567890" class="text-orange hover:underline">+41 123 456 789</a></p>
+                    <p class="text-sm">Astriana Travels partners with authorized consolidators for ticket issuance. Not IATA-accredited yet but operating under trusted partners.</p>
+                </div>
+            </div>
+            <div class="text-center text-sm">Copyright © 2025 Astriana Travels</div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
